@@ -1,0 +1,6 @@
+[submodule "NetRaylib"]
+	path = NetRaylib
+	url = git@github.com:ChrisDill/Raylib-cs.git
+[submodule "NetImGui"]
+	path = NetImGui
+	url = git@github.com:mellinoe/ImGui.NET.git

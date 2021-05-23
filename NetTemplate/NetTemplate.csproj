@@ -1,0 +1,136 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\NetRaylib\Raylib-cs\Raylib-cs.csproj" />
+    <ProjectReference Include="..\NetImGui\src\ImGui.NET\ImGui.NET.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+
+    <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
+    <IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
+    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
+
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <DebuggerSupport>false</DebuggerSupport>
+    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
+    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
+    <EventSourceSupport>false</EventSourceSupport>
+    <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+
+    <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+    <IlcDisableReflection>true</IlcDisableReflection>
+    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsLinux)'=='true'">
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsOSX)'=='true'">
+    <RuntimeIdentifier>osx-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsWindows)'=='true'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\linux-x64\native\libraylib.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>libraylib.so</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+    <Content Include="$(MSBuildThisFileDirectory)..\NetImGui\deps\cimgui\linux-x64\cimgui.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>cimgui.so</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
+    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\osx-x64\native\libraylib.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>libraylib.dylib</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
+    <Content Include="$(MSBuildThisFileDirectory)..\NetImGui\deps\cimgui\osx-x64\cimgui.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>cimgui.dylib</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\win-x64\native\raylib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>raylib.dll</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <Content Include="$(MSBuildThisFileDirectory)..\NetImGui\deps\cimgui\win-x64\cimgui.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>cimgui.dll</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x86'">
+    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\win-x64\native\raylib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>raylib.dll</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x86'">
+    <Content Include="$(MSBuildThisFileDirectory)..\NetImGui\deps\cimgui\win-x64\cimgui.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>cimgui.dll</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="6.0.0-preview.6.21273.1" />
+  </ItemGroup>
+
+  <Target Name="CustomActionsAfterPublish" AfterTargets="Publish" Condition="'$(Configuration)|$(RuntimeIdentifier)' == 'Release|linux-x64'">
+    <Message Importance="high" Text="Deleting old compressed executable..." />
+    <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName)Compressed" />
+
+    <Message Importance="high" Text="Striping debug info from native executable (linux) ..." />
+    <Exec Command="strip $(pwd)/$(OutDir)native/$(ProjectName)" />
+
+    <Message Importance="high" Text="Compressing native executable..." />
+    <Exec Command="upx -qq --lzma --compress-exports=0 $(pwd)/$(OutDir)native/$(ProjectName) -o $(pwd)/$(PublishDir)$(ProjectName)Compressed" />
+
+    <Message Importance="high" Text="Compressing libraries if needed..." />
+    <Exec Command="chmod +x $(pwd)/$(PublishDir)libraylib.so" />
+    <Exec Command="chmod +x $(pwd)/$(PublishDir)cimgui.so" />
+    <!--<Exec Command="upx -qqq - -lzma - -compress-exports=0 $(pwd)/$(PublishDir)libraylib.so || true" />-->
+    <Exec Command="upx -qqq --lzma --compress-exports=0 $(pwd)/$(PublishDir)cimgui.so || true" />
+
+    <Message Importance="high" Text="Deleting unnecessary artifact files..." />
+    <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName).pdb" />
+    <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName).deps.json" />
+    <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName).runtimeconfig.json" />
+    <Exec Command="rm -f $(pwd)/$(PublishDir)ImGui.NET.pdb" />
+    <Exec Command="rm -f $(pwd)/$(PublishDir)ImGui.NET.xml" />
+    <Exec Command="rm -f $(pwd)/$(PublishDir)Raylib-cs.pdb" />
+    <Exec Command="rm -f $(pwd)/$(PublishDir)Raylib-cs.xml" />
+    <Exec Command="rm -rf $(pwd)/$(PublishDir)runtimes" />
+  </Target>
+
+</Project>

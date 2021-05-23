@@ -1,0 +1,288 @@
+
+# Dotnet Documentation
+
+# Getting Started Guide:
+# https://docs.microsoft.com/en-us/dotnet/core/tools/
+# https://docs.microsoft.com/en-us/dotnet/core/dotnet-five
+# https://docs.microsoft.com/en-us/dotnet/core/tutorials/with-visual-studio-code
+
+# Build and Run commands:
+dotnet build
+dotnet run
+dotnet run --project Project/Project.csproj
+
+# Nuget How-To:
+# https://docs.microsoft.com/en-us/nuget/quickstart/install-and-use-a-package-using-the-dotnet-cli
+
+# How to deploy/publish:
+# Note: Use "clean" instead of "publish" to clean output folder
+# https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
+# https://docs.microsoft.com/en-us/dotnet/core/deploying/
+# https://docs.microsoft.com/en-us/dotnet/core/deploying/deploy-with-cli
+# https://docs.microsoft.com/en-us/dotnet/core/deploying/ready-to-run
+# https://docs.microsoft.com/en-us/dotnet/core/deploying/trim-self-contained
+# https://docs.microsoft.com/en-us/dotnet/core/deploying/single-file
+# NET FDE (Frame-Dependant-Executable) -> Doesn't work on systems without .NET Runtime installed
+dotnet publish --configuration Release
+dotnet publish -c Release
+dotnet publish -c Release -r linux-x64 --self-contained false -p:PublishReadyToRun=true -p:PublishSingleFile=true
+# NET SCD (Self-Contained-Deployment) -> Doesn't need .NET Runtime installed
+dotnet publish -c Release -r linux-x64
+dotnet publish -c Release -r linux-x64 -p:PublishReadyToRun=true -p:PublishTrimmed=true -p:PublishSingleFile=true
+dotnet publish -c Release -r linux-x64 -p:PublishReadyToRun=true
+
+# CoreRT (NativeAOT) -> Override NET SCD builds
+# https://github.com/dotnet/runtimelab/blob/feature/NativeAOT/docs/using-nativeaot/prerequisites.md
+# https://github.com/dotnet/runtimelab/tree/feature/NativeAOT
+# https://github.com/dotnet/runtimelab/tree/feature/NativeAOT/samples/HelloWorld
+# https://github.com/dotnet/runtimelab/tree/feature/NativeAOT/samples/NativeLibrary
+
+# Optimize CoreRT (NativeAOT) builds
+# https://github.com/dotnet/runtimelab/blob/feature/NativeAOT/docs/using-nativeaot/optimizing.md
+# https://docs.microsoft.com/en-us/dotnet/core/deploying/trimming-options#trimming-framework-library-features
+# https://github.com/dotnet/runtime/blob/main/docs/design/features/globalization-invariant-mode.md
+
+# ----------------------------------------------------------
+
+# Install NET Framework SDK 5.0
+# https://dotnet.microsoft.com/download/dotnet/5.0
+
+# Install VSCode + C# Extension
+# https://code.visualstudio.com/
+# https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp
+
+# Create Solution (A solution is a container of projects)
+dotnet new sln -o NetDesktopTemplate
+cd NetDesktopTemplate
+
+# Create Project
+dotnet new console -o NetTemplate
+dotnet sln add NetTemplate/NetTemplate.csproj
+
+# [Alternative] Install dependencies (Nuget)
+dotnet add package Raylib-cs --version 3.7.0
+dotnet add package ImGui.NET --version 1.78.0
+
+# Download Raylib-cs https://github.com/ChrisDill/Raylib-cs
+git submodule add git@github.com:ChrisDill/Raylib-cs.git NetRaylib
+dotnet sln add NetRaylib/Raylib-cs/Raylib-cs.csproj
+dotnet add NetTemplate/NetTemplate.csproj reference NetRaylib/Raylib-cs/Raylib-cs.csproj
+
+# Download Raylib-cs native dependencies (Linux x64)
+wget -P NetRaylib/Raylib-cs/runtimes/linux-x64/native/ https://github.com/raysan5/raylib/releases/download/3.7.0/raylib-3.7.0_linux_amd64.tar.gz
+tar -C NetRaylib/Raylib-cs/runtimes/linux-x64/native/ --transform 's/.*\///g' -xf NetRaylib/Raylib-cs/runtimes/linux-x64/native/raylib-3.7.0_linux_amd64.tar.gz raylib-3.7.0_linux_amd64/lib/libraylib.so.3.7.0
+mv NetRaylib/Raylib-cs/runtimes/linux-x64/native/libraylib.so.3.7.0 NetRaylib/Raylib-cs/runtimes/linux-x64/native/libraylib.so
+rm NetRaylib/Raylib-cs/runtimes/linux-x64/native/raylib-3.7.0_linux_amd64.tar.gz
+
+# Download Raylib-cs native dependencies (MacOS x64)
+wget -P NetRaylib/Raylib-cs/runtimes/osx-x64/native/ https://github.com/raysan5/raylib/releases/download/3.7.0/raylib-3.7.0_macos.tar.gz
+tar -C NetRaylib/Raylib-cs/runtimes/osx-x64/native/ --transform 's/.*\///g' -xf NetRaylib/Raylib-cs/runtimes/osx-x64/native/raylib-3.7.0_macos.tar.gz raylib-3.7.0_macos/lib/libraylib.3.7.0.dylib
+mv NetRaylib/Raylib-cs/runtimes/osx-x64/native/libraylib.3.7.0.dylib NetRaylib/Raylib-cs/runtimes/osx-x64/native/libraylib.dylib
+rm NetRaylib/Raylib-cs/runtimes/osx-x64/native/raylib-3.7.0_macos.tar.gz
+
+# Download Raylib-cs native dependencies (Windows x64)
+wget -P NetRaylib/Raylib-cs/runtimes/win-x64/native/ https://github.com/raysan5/raylib/releases/download/3.7.0/raylib-3.7.0_win64_msvc16.zip
+unzip -p NetRaylib/Raylib-cs/runtimes/win-x64/native/raylib-3.7.0_win64_msvc16.zip raylib-3.7.0_win64_msvc16/lib/raylib.dll > NetRaylib/Raylib-cs/runtimes/win-x64/native/raylib.dll
+rm NetRaylib/Raylib-cs/runtimes/win-x64/native/raylib-3.7.0_win64_msvc16.zip
+
+# Download Raylib-cs native dependencies (Windows x86)
+wget -P NetRaylib/Raylib-cs/runtimes/win-x86/native/ https://github.com/raysan5/raylib/releases/download/3.7.0/raylib-3.7.0_win32_msvc16.zip
+unzip -p NetRaylib/Raylib-cs/runtimes/win-x86/native/raylib-3.7.0_win32_msvc16.zip raylib-3.7.0_win32_msvc16/lib/raylib.dll > NetRaylib/Raylib-cs/runtimes/win-x86/native/raylib.dll
+rm NetRaylib/Raylib-cs/runtimes/win-x86/native/raylib-3.7.0_win32_msvc16.zip
+
+# Download ImGui.NET https://github.com/mellinoe/ImGui.NET
+git submodule add git@github.com:mellinoe/ImGui.NET.git NetImGui
+dotnet sln add NetImGui/src/ImGui.NET/ImGui.NET.csproj
+dotnet add NetTemplate/NetTemplate.csproj reference NetImGui/src/ImGui.NET/ImGui.NET.csproj
+
+# Edit NetTemplate.csproj
+#	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+#	<OutputType>WinExe</OutputType>
+#
+#	<IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux> 
+#	<IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX> 
+#	<IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows> 
+#
+#	<PropertyGroup Condition="'$(IsLinux)'=='true'">
+#		<RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+#	</PropertyGroup>
+#
+#	<PropertyGroup Condition="'$(IsOSX)'=='true'">
+#		<RuntimeIdentifier>osx-x64</RuntimeIdentifier>
+#	</PropertyGroup>
+#
+#	<PropertyGroup Condition="'$(IsWindows)'=='true'">
+#		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+#	</PropertyGroup>
+#
+#	<ItemGroup>
+#		<Content Include="Resources\*.*">
+#			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+#		</Content>
+#	</ItemGroup>
+
+# Edit NetTemplate.csproj (Linux x64)
+#  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+#    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\linux-x64\native\libraylib.so">
+#      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+#      <Link>libraylib.so</Link>
+#    </Content>
+#  </ItemGroup>
+#
+#  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+#    <Content Include="$(MSBuildThisFileDirectory)..\NetImGui\deps\cimgui\linux-x64\cimgui.so">
+#      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+#      <Link>cimgui.so</Link>
+#    </Content>
+#  </ItemGroup>
+
+# Edit NetTemplate.csproj (MacOS x64)
+#  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
+#    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\osx-x64\native\libraylib.dylib">
+#      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+#      <Link>libraylib.dylib</Link>
+#    </Content>
+#  </ItemGroup>
+#
+#  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
+#    <Content Include="$(MSBuildThisFileDirectory)..\NetImGui\deps\cimgui\osx-x64\cimgui.dylib">
+#      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+#      <Link>cimgui.dylib</Link>
+#    </Content>
+#  </ItemGroup>
+
+# Edit NetTemplate.csproj (Windows x64)
+#  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+#    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\win-x64\native\raylib.dll">
+#      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+#      <Link>raylib.dll</Link>
+#    </Content>
+#  </ItemGroup>
+#
+#  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+#    <Content Include="$(MSBuildThisFileDirectory)..\NetImGui\deps\cimgui\win-x64\cimgui.dll">
+#      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+#      <Link>cimgui.dll</Link>
+#    </Content>
+#  </ItemGroup>
+
+# Edit NetTemplate.csproj (Windows x86)
+#  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x86'">
+#    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\win-x64\native\raylib.dll">
+#      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+#      <Link>raylib.dll</Link>
+#    </Content>
+#  </ItemGroup>
+#
+#  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x86'">
+#    <Content Include="$(MSBuildThisFileDirectory)..\NetImGui\deps\cimgui\win-x64\cimgui.dll">
+#      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+#      <Link>cimgui.dll</Link>
+#    </Content>
+#  </ItemGroup>
+
+# Add .gitignore
+#	# .NET Core build folders
+#	bin/
+#	obj/
+git init
+git add .
+
+# Add .gitattributes
+# Add .editorconfig
+# Add LICENSE.md
+# Add README.md
+# Add CHANGELOG.md
+
+# Add project code:
+# 	- Program.cs
+# 	- ImGuiController.cs
+
+# Open project in VSCode, accept both prompts (create .vscode folder and restore the project so assembly references works in the editor)
+# Edit launch.json (to allow input in the debug terminal of VSCode)
+#	"console": "integratedTerminal",
+
+# Add .vscode/settings.json
+
+# [OPTIONAL] Install CoreRT (NativeAOT) support (Nuget)
+dotnet new nuget
+# Edit nuget.config
+#	<add key="dotnet-experimental" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental/nuget/v3/index.json" />
+#	<add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
+cd NetTemplate
+dotnet add package Microsoft.DotNet.ILCompiler --prerelease
+sudo apt-get install clang zlib1g-dev libkrb5-dev # libcurl4-openssl-dev
+
+# [OPTIONAL] Optimize CoreRT build (Edit NetTemplate.csproj)
+#    <InvariantGlobalization>true</InvariantGlobalization>
+#    <DebuggerSupport>false</DebuggerSupport>
+#    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
+#    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
+#    <EventSourceSupport>false</EventSourceSupport>
+#    <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+#    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+#
+#    <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+#    <IlcDisableReflection>true</IlcDisableReflection>
+#    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+#    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+
+# Build and test project:
+cd NetTemplate
+dotnet build
+dotnet build -r linux-x64
+dotnet run
+dotnet run -r linux-x64
+
+# Deploy/Publish (if CoreRT is NOT installed):
+cd NetTemplate
+dotnet publish -c Release --self-contained false
+dotnet publish -c Release -p:PublishReadyToRun=true -p:PublishTrimmed=true -p:PublishSingleFile=true
+dotnet publish -c Release -r linux-x64 --self-contained false
+dotnet publish -c Release -r linux-x64 -p:PublishReadyToRun=true -p:PublishTrimmed=true -p:PublishSingleFile=true
+dotnet publish -c Release -r win-x64 --self-contained false
+dotnet publish -c Release -r win-x64 -p:PublishReadyToRun=true -p:PublishTrimmed=true -p:PublishSingleFile=true
+
+# Deploy/Publish (if CoreRT IS installed):
+cd NetTemplate
+dotnet publish -c Release -p:PublishReadyToRun=true
+dotnet publish -c Release -r linux-x64 -p:PublishReadyToRun=true
+dotnet publish -c Release -r win-x64 -p:PublishReadyToRun=true
+
+# ----------------------------------------------------------
+
+# [OPTIONAL] After Publish Script (Linux x64)
+#  <Target Name="CustomActionsAfterPublish" AfterTargets="Publish" Condition="'$(Configuration)|$(RuntimeIdentifier)' == 'Release|linux-x64'">
+#    <Message Importance="high" Text="Deleting old compressed executable..." />
+#    <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName)Compressed" />
+#
+#    <Message Importance="high" Text="Striping debug info from native executable (linux) ..." />
+#    <Exec Command="strip $(pwd)/$(OutDir)native/$(ProjectName)" />
+#
+#    <Message Importance="high" Text="Compressing native executable..." />
+#    <Exec Command="upx -qq --lzma --compress-exports=0 $(pwd)/$(OutDir)native/$(ProjectName) -o $(pwd)/$(PublishDir)$(ProjectName)Compressed" />
+#
+#    <Message Importance="high" Text="Compressing libraries if needed..." />
+#    <Exec Command="chmod +x $(pwd)/$(PublishDir)libraylib.so" />
+#    <Exec Command="chmod +x $(pwd)/$(PublishDir)cimgui.so" />
+#    <!--<Exec Command="upx -qqq - -lzma - -compress-exports=0 $(pwd)/$(PublishDir)libraylib.so || true" />-->
+#    <Exec Command="upx -qqq --lzma --compress-exports=0 $(pwd)/$(PublishDir)cimgui.so || true" />
+#
+#    <Message Importance="high" Text="Deleting unnecessary artifact files..." />
+#    <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName).pdb" />
+#    <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName).deps.json" />
+#    <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName).runtimeconfig.json" />
+#    <Exec Command="rm -f $(pwd)/$(PublishDir)ImGui.NET.pdb" />
+#    <Exec Command="rm -f $(pwd)/$(PublishDir)ImGui.NET.xml" />
+#    <Exec Command="rm -f $(pwd)/$(PublishDir)Raylib-cs.pdb" />
+#    <Exec Command="rm -f $(pwd)/$(PublishDir)Raylib-cs.xml" />
+#    <Exec Command="rm -rf $(pwd)/$(PublishDir)runtimes" />
+#  </Target>
+
+# [OPTIONAL] Strip debug info:
+# Note: ONLY for linux native executables
+strip NetTemplate
+
+# [OPTIONAL] Compress build:
+# Note: UPX compressed .exe builds (windows) doesn't work on Wine/Proton on Linux, libraries (.dll) works tought
+upx -qq --lzma --compress-exports=0 NetTemplate -o NetTemplateCompressed
