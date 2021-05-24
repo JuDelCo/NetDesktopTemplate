@@ -1,10 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\NetRaylib\Raylib-cs\Raylib-cs.csproj" />
-    <ProjectReference Include="..\NetImGui\src\ImGui.NET\ImGui.NET.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>WinExe</OutputType>
@@ -20,13 +15,23 @@
     <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
     <EventSourceSupport>false</EventSourceSupport>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
-    <UseSystemResourceKeys>true</UseSystemResourceKeys>
-
-    <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
-    <IlcDisableReflection>true</IlcDisableReflection>
     <IlcOptimizationPreference>Size</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+
+    <!-- If your code does need Reflection, comment this (minimal footprint size will be bigger) -->
+    <IlcDisableReflection>true</IlcDisableReflection>
+
+    <!-- Uncomment this to strip NET System exception messages and stack trace metadata (minimal footprint size will be smaller) -->
+    <!--<UseSystemResourceKeys>true</UseSystemResourceKeys>-->
+    <!--<IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>-->
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\NetRaylib\Raylib-cs\Raylib-cs.csproj" />
+    <ProjectReference Include="..\NetImGui\src\ImGui.NET\ImGui.NET.csproj" />
+    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="6.0.0-preview.6.21273.1" />
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(IsLinux)'=='true'">
     <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
@@ -47,9 +52,9 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\linux-x64\native\libraylib.so">
+    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\linux-x64\native\raylib.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>libraylib.so</Link>
+      <Link>raylib.so</Link>
     </Content>
   </ItemGroup>
 
@@ -61,9 +66,9 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
-    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\osx-x64\native\libraylib.dylib">
+    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\osx-x64\native\raylib.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>libraylib.dylib</Link>
+      <Link>raylib.dylib</Link>
     </Content>
   </ItemGroup>
 
@@ -102,10 +107,6 @@
     </Content>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="6.0.0-preview.6.21273.1" />
-  </ItemGroup>
-
   <Target Name="CustomActionsAfterPublish" AfterTargets="Publish" Condition="'$(Configuration)|$(RuntimeIdentifier)' == 'Release|linux-x64'">
     <Message Importance="high" Text="Deleting old compressed executable..." />
     <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName)Compressed" />
@@ -117,15 +118,16 @@
     <Exec Command="upx -qq --lzma --compress-exports=0 $(pwd)/$(OutDir)native/$(ProjectName) -o $(pwd)/$(PublishDir)$(ProjectName)Compressed" />
 
     <Message Importance="high" Text="Compressing libraries if needed..." />
-    <Exec Command="chmod +x $(pwd)/$(PublishDir)libraylib.so" />
+    <Exec Command="chmod +x $(pwd)/$(PublishDir)raylib.so" />
     <Exec Command="chmod +x $(pwd)/$(PublishDir)cimgui.so" />
-    <!--<Exec Command="upx -qqq - -lzma - -compress-exports=0 $(pwd)/$(PublishDir)libraylib.so || true" />-->
+    <!--<Exec Command="upx -qqq - -lzma - -compress-exports=0 $(pwd)/$(PublishDir)raylib.so || true" />-->
     <Exec Command="upx -qqq --lzma --compress-exports=0 $(pwd)/$(PublishDir)cimgui.so || true" />
 
     <Message Importance="high" Text="Deleting unnecessary artifact files..." />
     <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName).pdb" />
     <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName).deps.json" />
     <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName).runtimeconfig.json" />
+    <Exec Command="rm -f $(pwd)/$(PublishDir)JuCore.pdb" />
     <Exec Command="rm -f $(pwd)/$(PublishDir)ImGui.NET.pdb" />
     <Exec Command="rm -f $(pwd)/$(PublishDir)ImGui.NET.xml" />
     <Exec Command="rm -f $(pwd)/$(PublishDir)Raylib-cs.pdb" />

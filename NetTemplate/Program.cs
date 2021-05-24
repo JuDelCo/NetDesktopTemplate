@@ -1,4 +1,6 @@
 ﻿using ImGuiNET;
+using Ju.Services;
+using Ju.Time;
 using Raylib_cs;
 using System;
 using System.Numerics;
@@ -14,6 +16,16 @@ namespace NetTemplate
 			Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
 			Raylib.SetTargetFPS(60);
 			ImGuiImpl.Startup();
+
+			// ------------------------------------------------------------
+			// Setup Core
+			// ------------------------------------------------------------
+
+			ServiceContainer.RegisterService<ITaskService, TaskService>();
+			ServiceContainer.RegisterService<ICoroutineService, CoroutineService>();
+			ServiceContainer.RegisterService<ICacheService, CacheService>();
+
+			// Register your custom services
 
 			// ------------------------------------------------------------
 			// Setup state
@@ -57,11 +69,29 @@ namespace NetTemplate
 
 			// ------------------------------------------------------------
 
+			Core.Event.Subscribe<TimeUpdateEvent>(new Ju.Handlers.KeepLinkHandler(), (e) =>
+			{
+				Console.WriteLine("TimeUpdateEvent: " + e.DeltaTime);
+			});
+
+			Core.Cache.ListAdd(lenna);
+			Core.Cache.ListAdd(noise);
+			Console.WriteLine("List Count: " + Core.Cache.ListGet<Texture2D>().Count);
+
 			while (!Raylib.WindowShouldClose())
 			{
 				Raylib.BeginDrawing();
 				Raylib.ClearBackground(Color.BLACK);
 				ImGuiImpl.OnBeginFrame(Raylib.GetFrameTime());
+
+				// ------------------------------------------------------------
+				// Core time events (Basic)
+				// ------------------------------------------------------------
+
+				// Update loop
+				Core.Event.Fire(new TimePreUpdateEvent(Raylib.GetFrameTime()));
+				Core.Event.Fire(new TimeUpdateEvent(Raylib.GetFrameTime()));
+				Core.Event.Fire(new TimePostUpdateEvent(Raylib.GetFrameTime()));
 
 				// ------------------------------------------------------------
 				// Frame logic
@@ -99,6 +129,7 @@ namespace NetTemplate
 				Raylib.EndDrawing();
 			}
 
+			ServiceContainer.Dispose();
 			Raylib.CloseWindow();
 		}
 	}

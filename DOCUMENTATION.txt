@@ -59,6 +59,11 @@ cd NetDesktopTemplate
 dotnet new console -o NetTemplate
 dotnet sln add NetTemplate/NetTemplate.csproj
 
+# Download Core https://github.com/JuDelCo/Core
+git submodule add git@github.com:JuDelCo/Core.git Core
+dotnet sln add Core/Core.csproj
+dotnet add NetTemplate/NetTemplate.csproj reference Core/Core.csproj
+
 # [Alternative] Install dependencies (Nuget)
 dotnet add package Raylib-cs --version 3.7.0
 dotnet add package ImGui.NET --version 1.78.0
@@ -71,13 +76,13 @@ dotnet add NetTemplate/NetTemplate.csproj reference NetRaylib/Raylib-cs/Raylib-c
 # Download Raylib-cs native dependencies (Linux x64)
 wget -P NetRaylib/Raylib-cs/runtimes/linux-x64/native/ https://github.com/raysan5/raylib/releases/download/3.7.0/raylib-3.7.0_linux_amd64.tar.gz
 tar -C NetRaylib/Raylib-cs/runtimes/linux-x64/native/ --transform 's/.*\///g' -xf NetRaylib/Raylib-cs/runtimes/linux-x64/native/raylib-3.7.0_linux_amd64.tar.gz raylib-3.7.0_linux_amd64/lib/libraylib.so.3.7.0
-mv NetRaylib/Raylib-cs/runtimes/linux-x64/native/libraylib.so.3.7.0 NetRaylib/Raylib-cs/runtimes/linux-x64/native/libraylib.so
+mv NetRaylib/Raylib-cs/runtimes/linux-x64/native/libraylib.so.3.7.0 NetRaylib/Raylib-cs/runtimes/linux-x64/native/raylib.so
 rm NetRaylib/Raylib-cs/runtimes/linux-x64/native/raylib-3.7.0_linux_amd64.tar.gz
 
 # Download Raylib-cs native dependencies (MacOS x64)
 wget -P NetRaylib/Raylib-cs/runtimes/osx-x64/native/ https://github.com/raysan5/raylib/releases/download/3.7.0/raylib-3.7.0_macos.tar.gz
 tar -C NetRaylib/Raylib-cs/runtimes/osx-x64/native/ --transform 's/.*\///g' -xf NetRaylib/Raylib-cs/runtimes/osx-x64/native/raylib-3.7.0_macos.tar.gz raylib-3.7.0_macos/lib/libraylib.3.7.0.dylib
-mv NetRaylib/Raylib-cs/runtimes/osx-x64/native/libraylib.3.7.0.dylib NetRaylib/Raylib-cs/runtimes/osx-x64/native/libraylib.dylib
+mv NetRaylib/Raylib-cs/runtimes/osx-x64/native/libraylib.3.7.0.dylib NetRaylib/Raylib-cs/runtimes/osx-x64/native/raylib.dylib
 rm NetRaylib/Raylib-cs/runtimes/osx-x64/native/raylib-3.7.0_macos.tar.gz
 
 # Download Raylib-cs native dependencies (Windows x64)
@@ -123,9 +128,9 @@ dotnet add NetTemplate/NetTemplate.csproj reference NetImGui/src/ImGui.NET/ImGui
 
 # Edit NetTemplate.csproj (Linux x64)
 #  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-#    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\linux-x64\native\libraylib.so">
+#    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\linux-x64\native\raylib.so">
 #      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-#      <Link>libraylib.so</Link>
+#      <Link>raylib.so</Link>
 #    </Content>
 #  </ItemGroup>
 #
@@ -138,9 +143,9 @@ dotnet add NetTemplate/NetTemplate.csproj reference NetImGui/src/ImGui.NET/ImGui
 
 # Edit NetTemplate.csproj (MacOS x64)
 #  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
-#    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\osx-x64\native\libraylib.dylib">
+#    <Content Include="$(MSBuildThisFileDirectory)..\NetRaylib\Raylib-cs\runtimes\osx-x64\native\raylib.dylib">
 #      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-#      <Link>libraylib.dylib</Link>
+#      <Link>raylib.dylib</Link>
 #    </Content>
 #  </ItemGroup>
 #
@@ -196,7 +201,8 @@ git add .
 
 # Add project code:
 # 	- Program.cs
-# 	- ImGuiController.cs
+# 	- ImGuiImpl.cs
+# 	- Core.cs
 
 # Open project in VSCode, accept both prompts (create .vscode folder and restore the project so assembly references works in the editor)
 # Edit launch.json (to allow input in the debug terminal of VSCode)
@@ -263,15 +269,16 @@ dotnet publish -c Release -r win-x64 -p:PublishReadyToRun=true
 #    <Exec Command="upx -qq --lzma --compress-exports=0 $(pwd)/$(OutDir)native/$(ProjectName) -o $(pwd)/$(PublishDir)$(ProjectName)Compressed" />
 #
 #    <Message Importance="high" Text="Compressing libraries if needed..." />
-#    <Exec Command="chmod +x $(pwd)/$(PublishDir)libraylib.so" />
+#    <Exec Command="chmod +x $(pwd)/$(PublishDir)raylib.so" />
 #    <Exec Command="chmod +x $(pwd)/$(PublishDir)cimgui.so" />
-#    <!--<Exec Command="upx -qqq - -lzma - -compress-exports=0 $(pwd)/$(PublishDir)libraylib.so || true" />-->
+#    <!--<Exec Command="upx -qqq - -lzma - -compress-exports=0 $(pwd)/$(PublishDir)raylib.so || true" />-->
 #    <Exec Command="upx -qqq --lzma --compress-exports=0 $(pwd)/$(PublishDir)cimgui.so || true" />
 #
 #    <Message Importance="high" Text="Deleting unnecessary artifact files..." />
 #    <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName).pdb" />
 #    <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName).deps.json" />
 #    <Exec Command="rm -f $(pwd)/$(PublishDir)$(ProjectName).runtimeconfig.json" />
+#    <Exec Command="rm -f $(pwd)/$(PublishDir)JuCore.pdb" />
 #    <Exec Command="rm -f $(pwd)/$(PublishDir)ImGui.NET.pdb" />
 #    <Exec Command="rm -f $(pwd)/$(PublishDir)ImGui.NET.xml" />
 #    <Exec Command="rm -f $(pwd)/$(PublishDir)Raylib-cs.pdb" />

@@ -4,6 +4,18 @@ NetTemplate
 NetTemplate is a C# NET project template with the latest Raylib-cs and ImGui.NET libraries optimized and ready to be compiled to native code using CoreRT (NativeAOT).
 
 
+Install
+=====================
+
+1) Clone this git repository:
+
+```
+git clone git@github.com:JuDelCo/NetDesktopTemplate.git --recurse-submodules
+```
+
+2) Run the ```INSTALL.sh``` (Linux) script to install the dependencies automatically.
+
+
 The MIT License (MIT)
 =====================
 
